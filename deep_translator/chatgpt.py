@@ -10,7 +10,7 @@ from deep_translator.exceptions import ApiKeyException
 
 class ChatGptTranslator(BaseTranslator):
     """
-    class that wraps functions, which use the ChatGPT
+    class that wraps functions, which use the DeeplTranslator translator
     under the hood to translate word(s)
     """
 
@@ -40,24 +40,20 @@ class ChatGptTranslator(BaseTranslator):
         @param text: text to translate
         @return: translated text
         """
-        import openai
+        from openai import OpenAI
 
-        openai.api_key = self.api_key
+        client = OpenAI(api_key=self.api_key)
 
         prompt = f"Translate the text below into {self.target}.\n"
         prompt += f'Text: "{text}"'
 
-        response = openai.ChatCompletion.create(
+        response = client.responses.create(
             model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            instructions="You are a helpful translator",
+            input=prompt,
         )
 
-        return response.choices[0].message.content
+        return response.output_text
 
     def translate_file(self, path: str, **kwargs) -> str:
         return self._translate_file(path, **kwargs)
