@@ -32,7 +32,7 @@ class DeeplTranslator(BaseTranslator):
         target: str = "en",
         api_key: Optional[str] = os.getenv(DEEPL_ENV_VAR, None),
         use_free_api: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """
         @param api_key: your DeeplTranslator api key.
@@ -55,7 +55,7 @@ class DeeplTranslator(BaseTranslator):
             source=source,
             target=target,
             languages=DEEPL_LANGUAGE_TO_CODE,
-            **kwargs
+            **kwargs,
         )
 
     def translate(self, text: str, **kwargs) -> str:
@@ -69,17 +69,24 @@ class DeeplTranslator(BaseTranslator):
 
             # Create the request parameters.
             translate_endpoint = "translate"
-            params = {
-                "auth_key": self.api_key,
-                "source_lang": self._source,
+            headers = {
+                "Authorization": f"DeepL-Auth-Key {self.api_key}",
+                "Content-Type": "application/json",
+            }
+
+            json_data = {
+                "text": [text],
                 "target_lang": self._target,
-                "text": text,
+                "source_lang": self._source,
             }
             # Do the request and check the connection.
             try:
-                response = requests.get(
-                    self._base_url + translate_endpoint, params=params
+                response = requests.post(
+                    self._base_url + translate_endpoint,
+                    headers=headers,
+                    json=json_data,
                 )
+
             except ConnectionError:
                 raise ServerException(503)
             # If the answer is not success, raise server exception.
